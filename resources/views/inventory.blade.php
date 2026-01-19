@@ -1,10 +1,10 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
-                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                    {{ __('Inventory') }}
-                </h2>
-                <button class="p-2 px-4 border-2 rounded-2xl cursor-pointer flex bg-blue-900 text-white font-semibold">Add Product</button>
+        <div id="app" class="flex items-center justify-between">
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                {{ __('Inventory') }}
+            </h2>
+            <div id="addProductModalRoot" data-categories='@json($categories ?? [])' data-action="{{ route('products.store') }}"></div>
         </div>
     </x-slot>
 
@@ -45,3 +45,5 @@
     </div>
 
 </x-app-layout>
+ 
+<!-- Vue will render the modal via the component mounted to #app -->

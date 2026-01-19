@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Category;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -11,7 +13,9 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return view('inventory');
+        return view('inventory', [
+            'categories' => Category::all(),
+        ]);
     }
 
     /**
@@ -27,7 +31,17 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'name' => 'required|string',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric',
+            'stock_quantity' => 'required|integer',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        Product::create($request->all());
+
+        return redirect()->back()->with('success', 'Product added successfully!');
     }
 
     /**
