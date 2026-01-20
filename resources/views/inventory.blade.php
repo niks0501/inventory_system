@@ -4,7 +4,12 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Inventory') }}
             </h2>
-            <div id="addProductModalRoot" data-categories='@json($categories ?? [])' data-action="{{ route('products.store') }}"></div>
+            <div id="vue">
+                <add-product-modal
+                    :categories='@json($categories)'
+                    action="{{ route('products.store') }}"
+                ></add-product-modal>
+            </div>
         </div>
     </x-slot>
 

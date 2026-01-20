@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
+use App\Http\Requests\StoreProductRequest;
 
 class ProductController extends Controller
 {
@@ -29,17 +30,11 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric',
-            'stock_quantity' => 'required|integer',
-            'category_id' => 'required|exists:categories,id',
-        ]);
+        $validated = $request->validated();
 
-        Product::create($request->all());
+        Product::create($validated);
 
         return redirect()->back()->with('success', 'Product added successfully!');
     }

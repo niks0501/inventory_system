@@ -1,65 +1,148 @@
 <template>
   <div>
-    <!-- Open Modal Button -->
+    <!-- Trigger Button -->
     <button
       @click="open = true"
-      class="p-2 px-4 border-2 rounded-2xl cursor-pointer flex bg-blue-900 text-white font-semibold"
+      class="inline-flex items-center gap-2 rounded-xl bg-blue-900 px-5 py-2.5
+             text-sm font-semibold text-white shadow hover:bg-blue-800
+             focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
-      Add Product
+      + Add Product
     </button>
 
-    <!-- Modal -->
-    <div v-if="open" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div class="bg-white w-full max-w-lg rounded-lg shadow-lg p-6 relative">
-        <h2 class="text-xl font-semibold mb-4">Add Product</h2>
+    <!-- Backdrop -->
+    <div
+      v-if="open"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    >
+      <!-- Modal -->
+      <div
+        class="w-full max-w-lg rounded-2xl bg-white shadow-xl"
+        role="dialog"
+        aria-modal="true"
+      >
+        <!-- Header -->
+        <div class="border-b px-6 py-4">
+          <h2 class="text-lg font-semibold text-gray-800">
+            Add New Product
+          </h2>
+          <p class="mt-1 text-sm text-gray-500">
+            Fill in the product details below.
+          </p>
+        </div>
 
-        <form method="POST" :action="action" enctype="multipart/form-data">
-          <input type="hidden" name="_token" :value="csrfToken" />
+        <!-- Form -->
+        <form method="POST" :action="action" class="px-6 py-5 space-y-4">
+          <input type="hidden" name="_token" :value="csrf" />
 
           <!-- Product Name -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium">Product Name</label>
-            <input name="name" class="w-full border rounded px-3 py-2" required>
+          <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">
+              Product Name
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              required
+              placeholder="e.g. Coke 1.5L"
+              class="mt-1 w-full rounded-lg border px-3 py-2
+                     focus:border-blue-500 focus:ring-blue-500"
+            />
           </div>
 
           <!-- Description -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium">Description</label>
-            <textarea name="description" class="w-full border rounded px-3 py-2"></textarea>
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows="3"
+              placeholder="Optional product description"
+              class="mt-1 w-full rounded-lg border px-3 py-2
+                     focus:border-blue-500 focus:ring-blue-500"
+            ></textarea>
           </div>
 
-          <!-- Price -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium">Price</label>
-            <input type="number" step="0.01" name="price" class="w-full border rounded px-3 py-2" required>
-          </div>
+          <!-- Price & Stock -->
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="price" class="block text-sm font-medium text-gray-700">
+                Price
+              </label>
+              <input
+                id="price"
+                name="price"
+                type="number"
+                step="0.01"
+                required
+                placeholder="0.00"
+                class="mt-1 w-full rounded-lg border px-3 py-2
+                       focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
 
-          <!-- Stock Quantity -->
-          <div class="mb-3">
-            <label class="block text-sm font-medium">Stock Quantity</label>
-            <input type="number" name="stock_quantity" class="w-full border rounded px-3 py-2" required>
+            <div>
+              <label for="stock_quantity" class="block text-sm font-medium text-gray-700">
+                Stock Quantity
+              </label>
+              <input
+                id="stock_quantity"
+                name="stock_quantity"
+                type="number"
+                required
+                placeholder="0"
+                class="mt-1 w-full rounded-lg border px-3 py-2
+                       focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           <!-- Category -->
-          <div class="mb-4">
-            <label class="block text-sm font-medium">Category</label>
-            <select name="category_id" class="w-full border rounded px-3 py-2" required>
-              <option value="">Select category</option>
-              <option v-for="category in categories" :value="category.id" :key="category.id">
-                {{ category.name }}
+          <div>
+            <label for="category_id" class="block text-sm font-medium text-gray-700">
+              Category
+            </label>
+            <select
+              id="category_id"
+              name="category_id"
+              required
+              class="mt-1 w-full rounded-lg border px-3 py-2
+                     focus:border-blue-500 focus:ring-blue-500"
+            >
+              <option value="">Select a category</option>
+              <option
+                v-for="c in categories"
+                :key="c.id"
+                :value="c.id"
+              >
+                {{ c.name }}
               </option>
             </select>
           </div>
 
-          <!-- Buttons -->
-          <div class="flex justify-end gap-2">
-            <button type="button" @click="open = false" class="px-4 py-2 border rounded">Cancel</button>
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-              Save
+          <!-- Actions -->
+          <div class="flex justify-end gap-3 border-t pt-4">
+            <button
+              type="button"
+              @click="open = false"
+              class="rounded-lg border px-4 py-2 text-sm
+                     hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="rounded-lg bg-green-600 px-5 py-2 text-sm
+                     font-semibold text-white shadow
+                     hover:bg-green-700 focus:ring-2 focus:ring-green-500"
+            >
+              Save Product
             </button>
           </div>
         </form>
-
       </div>
     </div>
   </div>
@@ -68,12 +151,13 @@
 <script setup>
 import { ref } from 'vue'
 
-const props = defineProps({
-  categories: { type: Array, default: () => [] },
-  action: { type: String, default: '' },
+defineProps({
+  categories: Array,
+  action: String,
 })
 
 const open = ref(false)
-
-const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+const csrf = document
+  .querySelector('meta[name="csrf-token"]')
+  ?.getAttribute('content')
 </script>
