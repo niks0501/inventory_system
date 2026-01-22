@@ -1,3 +1,44 @@
+<script setup>
+import { ref } from 'vue'
+
+const props = defineProps({
+  categories: Array,
+  action: String,
+})
+
+const open = ref(false)
+const csrf = document
+  .querySelector('meta[name="csrf-token"]')
+  ?.getAttribute('content')
+
+const formRef = ref(null)
+
+async function submit() {
+  const url = props.action
+  const fd = new FormData(formRef.value)
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-CSRF-TOKEN': csrf,
+    },
+    body: fd,
+  })
+
+  const data = await response.json()
+
+  if (response.ok) {
+    window.dispatchEvent(new CustomEvent('product-created', { detail: data.product }))
+    open.value = false
+    // reset form fields
+    formRef.value.reset()
+  } else {
+    // optional: handle validation errors
+    console.error('Create product failed', data)
+  }
+}
+</script>
+
 <template>
   <div>
     <!-- Trigger Button -->
@@ -32,7 +73,7 @@
         </div>
 
         <!-- Form -->
-        <form method="POST" :action="action" class="px-6 py-5 space-y-4">
+        <form @submit.prevent="submit" ref="formRef" class="px-6 py-5 space-y-4">
           <input type="hidden" name="_token" :value="csrf" />
 
           <!-- Product Name -->
@@ -148,16 +189,4 @@
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
 
-defineProps({
-  categories: Array,
-  action: String,
-})
-
-const open = ref(false)
-const csrf = document
-  .querySelector('meta[name="csrf-token"]')
-  ?.getAttribute('content')
-</script>

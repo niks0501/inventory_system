@@ -14,8 +14,10 @@ class ProductController extends Controller
      */
     public function index()
     {
+        $products = Product::with('category')->latest()->paginate(5);
         return view('inventory', [
             'categories' => Category::all(),
+            'products' => $products,
         ]);
     }
 
@@ -32,11 +34,14 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        $validated = $request->validated();
+        $product = Product::create($request->validated());
 
-        Product::create($validated);
+        $product->load('category');
 
-        return redirect()->back()->with('success', 'Product added successfully!');
+        return response()->json([
+            'message' => 'Product created successfully',
+            'product' => $product,
+        ], 201);
     }
 
     /**

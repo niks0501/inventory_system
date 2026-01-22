@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProductController;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/products', [App\Http\Controllers\ProductController::class, 'index'])->name('products.index');
-Route::post('/products', [App\Http\Controllers\ProductController::class, 'store'])->name('products.store');
+Route::get('/products', [ProductController::class, 'index'])->name('products.index');
+Route::post('/products', [ProductController::class, 'store'])->name('products.store');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
