@@ -1,8 +1,16 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import UpdateProductModal from './UpdateProductModal.vue'
+
+const selectedProduct = ref(null)
+const showEditModal = ref(false)
 
 const props = defineProps({
     initialProducts: {
+        type: Array,
+        default: () => ([]),
+    },
+    categories: {
         type: Array,
         default: () => ([]),
     },
@@ -10,7 +18,10 @@ const props = defineProps({
 
 const products = ref(Array.isArray(props.initialProducts) ? [...props.initialProducts] : [])
 
-
+function editProduct(product) {
+    selectedProduct.value = product
+    showEditModal.value = true
+}
 
 function handleProductCreated(e) {
     const p = e.detail
@@ -24,6 +35,13 @@ onMounted(() => {
 onUnmounted(() => {
     window.removeEventListener('product-created', handleProductCreated)
 })
+
+function handleProductUpdated(updatedProduct) {
+    const idx = products.value.findIndex(p => p.id === updatedProduct.id)
+    if (idx !== -1) {
+        products.value.splice(idx, 1, updatedProduct)
+    }
+}
 </script>
 
 <template>
@@ -46,7 +64,7 @@ onUnmounted(() => {
                                 <td class="px-6 py-4 whitespace-nowrap">{{ product.stock_quantity }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">₱{{ Number(product.price).toFixed(2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <button class="text-indigo-600 hover:text-indigo-900">Edit</button>
+                                    <button class="text-indigo-600 hover:text-indigo-900" @click="editProduct(product)">Edit</button>
                                     <button class="text-red-600 hover:text-red-900 ml-4">Delete</button>
                                 </td>
                             </tr>
@@ -55,5 +73,13 @@ onUnmounted(() => {
                             
                             <!-- More rows... -->
                         </tbody>
-                    </table>
+</table>
+
+                    <update-product-modal
+                        v-if="showEditModal"
+                        :product="selectedProduct"
+                        :categories="props.categories"
+                        @close="showEditModal = false"
+                        @updated="handleProductUpdated"
+                    ></update-product-modal>
 </template>

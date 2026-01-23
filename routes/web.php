@@ -10,6 +10,7 @@ Route::get('/', function () {
 
 Route::get('/products', [ProductController::class, 'index'])->name('products.index');
 Route::post('/products', [ProductController::class, 'store'])->name('products.store');
+Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
 
 Route::get('/dashboard', function () {
     return view('dashboard');

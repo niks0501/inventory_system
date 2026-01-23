@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
 {
@@ -32,7 +34,7 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreProductRequest $request)
+    public function store(StoreProductRequest $request): JsonResponse
     {
         $product = Product::create($request->validated());
 
@@ -41,7 +43,7 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
-        ], 201);
+        ], JsonResponse::HTTP_CREATED);
     }
 
     /**
@@ -63,15 +65,22 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateProductRequest $request, Product $product): JsonResponse
     {
-        //
+        $product->update($request->validated());
+
+        $product->load('category');
+
+        return response()->json([
+            'message' => 'Product updated successfully',
+            'product' => $product,
+        ], JsonResponse::HTTP_OK);
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Product $product)
     {
         //
     }
