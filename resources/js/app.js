@@ -1,16 +1,13 @@
 import "./bootstrap";
-import { createApp, h } from "vue";
+import { createApp } from "vue";
 import AddProductModal from "./components/AddProductModal.vue";
 import ProductTable from "./components/ProductTable.vue";
 
-// Create separate Vue apps and mount them to specific DOM roots to avoid id conflicts
-const modalApp = createApp({});
-modalApp.component("add-product-modal", AddProductModal);
-modalApp.mount("#modal-root");
-
-const productsApp = createApp({});
-productsApp.component("product-table", ProductTable);
-productsApp.mount("#products-vue");
+// Create Vue application and register components
+const app = createApp({});
+app.component("add-product-modal", AddProductModal);
+app.component("product-table", ProductTable);
+app.mount("#app");
 
 import Alpine from "alpinejs";
 

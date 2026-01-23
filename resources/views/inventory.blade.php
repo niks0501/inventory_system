@@ -4,17 +4,16 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Inventory') }}
             </h2>
-            <div id="modal-root">
-                <add-product-modal
-                    :categories='@json($categories)'
-                    action="{{ route('products.store') }}"
-                ></add-product-modal>
-            </div>
+        
+            <add-product-modal
+                :categories='@json($categories)'
+                action="{{ route('products.store') }}"
+            ></add-product-modal>
+            
         </div>
     </x-slot>
 
     <!-- Products Table -->
-    <div id="products-vue" data-products="@json($products->items())">
         <div class="py-10">
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -30,7 +29,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    
 
 </x-app-layout>
  
