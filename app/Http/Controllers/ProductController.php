@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+
 use App\Models\Category;
 use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\JsonResponse;
 
 class ProductController extends Controller
@@ -43,7 +44,7 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product created successfully',
             'product' => $product,
-        ], JsonResponse::HTTP_CREATED);
+        ], Response::HTTP_CREATED);
     }
 
     /**
@@ -74,7 +75,7 @@ class ProductController extends Controller
         return response()->json([
             'message' => 'Product updated successfully',
             'product' => $product,
-        ], JsonResponse::HTTP_OK);
+        ], Response::HTTP_OK);
     }
 
     /**

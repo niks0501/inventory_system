@@ -9,7 +9,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'updated'])
 
 const form = ref({})
-const formRef = ref(null)
+
 
 watch(
   () => props.product,
