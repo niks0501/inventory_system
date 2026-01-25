@@ -4,6 +4,7 @@ import UpdateProductModal from './UpdateProductModal.vue'
 
 const selectedProduct = ref(null)
 const showEditModal = ref(false)
+const showConfirmDeleteModal = ref(false)
 
 const props = defineProps({
     initialProducts: {
@@ -28,6 +29,11 @@ function handleProductCreated(e) {
     products.value.unshift(p)
 }
 
+function deleteProduct(product) {
+    selectedProduct.value = product
+    showConfirmDeleteModal.value = true
+}
+
 onMounted(() => {
     window.addEventListener('product-created', handleProductCreated)
 })
@@ -40,6 +46,30 @@ function handleProductUpdated(updatedProduct) {
     const idx = products.value.findIndex(p => p.id === updatedProduct.id)
     if (idx !== -1) {
         products.value.splice(idx, 1, updatedProduct)
+    }
+}
+
+async function handleProductDeleted(deleted) {
+    const deletedId = deleted && deleted.id ? deleted.id : deleted
+    const idx = products.value.findIndex(p => p.id === deletedId)
+    if (idx !== -1) {
+        products.value.splice(idx, 1)
+    }
+    showConfirmDeleteModal.value = false
+    selectedProduct.value = null
+    // Refresh current paginated page from server to keep list consistent
+    try {
+        const params = new URLSearchParams(window.location.search)
+        const res = await fetch('/products' + (params.toString() ? ('?' + params.toString()) : ''), {
+            headers: { Accept: 'application/json' },
+        })
+        if (res.ok) {
+            const data = await res.json()
+            // Laravel paginator returns { data: [...] }
+            products.value = Array.isArray(data.data) ? data.data : []
+        }
+    } catch (e) {
+        console.error('Failed to refresh products after delete', e)
     }
 }
 </script>
@@ -65,7 +95,7 @@ function handleProductUpdated(updatedProduct) {
                                 <td class="px-6 py-4 whitespace-nowrap">₱{{ Number(product.price).toFixed(2) }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <button class="text-indigo-600 hover:text-indigo-900" @click="editProduct(product)">Edit</button>
-                                    <button class="text-red-600 hover:text-red-900 ml-4">Delete</button>
+                                    <button class="text-red-600 hover:text-red-900 ml-4" @click="deleteProduct(product)">Delete</button>
                                 </td>
                             </tr>
                      
@@ -82,4 +112,11 @@ function handleProductUpdated(updatedProduct) {
                         @close="showEditModal = false"
                         @updated="handleProductUpdated"
                     ></update-product-modal>
+                    <delete-confirmation-modal
+                        v-if="showConfirmDeleteModal"
+                        :selected-item="selectedProduct"
+                        @close="showConfirmDeleteModal = false"
+                        @confirmed="handleProductDeleted"
+                    >
+                    </delete-confirmation-modal>
 </template>

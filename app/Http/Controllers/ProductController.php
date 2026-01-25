@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,9 +16,14 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $products = Product::with('category')->latest()->paginate(5);
+
+        if ($request->wantsJson()) {
+            return response()->json($products);
+        }
+
         return view('inventory', [
             'categories' => Category::all(),
             'products' => $products,
@@ -83,6 +89,10 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+
+        return response()->json([
+            'message' => 'Product deleted successfully',
+        ], Response::HTTP_OK);
     }
 }
