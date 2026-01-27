@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import UpdateProductModal from './UpdateProductModal.vue'
+import FilterProductsButton from './FilterProductsButton.vue'
 
 const selectedProduct = ref(null)
 const showEditModal = ref(false)
@@ -18,6 +19,7 @@ const props = defineProps({
 })
 
 const products = ref(Array.isArray(props.initialProducts) ? [...props.initialProducts] : [])
+const selectedCategories = ref([])
 
 function editProduct(product) {
     selectedProduct.value = product
@@ -32,6 +34,31 @@ function handleProductCreated(e) {
 function deleteProduct(product) {
     selectedProduct.value = product
     showConfirmDeleteModal.value = true
+}
+
+async function loadProducts() {
+    try {
+        const params = new URLSearchParams(window.location.search)
+        // remove any existing category params to replace with selected ones
+        params.delete('categories[]')
+        params.delete('categories')
+        selectedCategories.value.forEach(id => params.append('categories[]', id))
+
+        const res = await fetch('/products' + (params.toString() ? ('?' + params.toString()) : ''), {
+            headers: { Accept: 'application/json' },
+        })
+        if (res.ok) {
+            const data = await res.json()
+            products.value = Array.isArray(data.data) ? data.data : []
+        }
+    } catch (e) {
+        console.error('Failed to load products', e)
+    }
+}
+
+function handleCategoriesUpdate(newValue) {
+    selectedCategories.value = Array.isArray(newValue) ? [...newValue] : []
+    loadProducts()
 }
 
 onMounted(() => {
@@ -58,23 +85,16 @@ async function handleProductDeleted(deleted) {
     showConfirmDeleteModal.value = false
     selectedProduct.value = null
     // Refresh current paginated page from server to keep list consistent
-    try {
-        const params = new URLSearchParams(window.location.search)
-        const res = await fetch('/products' + (params.toString() ? ('?' + params.toString()) : ''), {
-            headers: { Accept: 'application/json' },
-        })
-        if (res.ok) {
-            const data = await res.json()
-            // Laravel paginator returns { data: [...] }
-            products.value = Array.isArray(data.data) ? data.data : []
-        }
-    } catch (e) {
-        console.error('Failed to refresh products after delete', e)
-    }
+    await loadProducts()
 }
 </script>
 
 <template>
+    <div class="mb-4 text-start">
+        <filter-products-button :categories="props.categories" @update:categories="handleCategoriesUpdate" />
+    </div>
+
+    <div class="min-h-60 overflow-auto">
         <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
@@ -86,6 +106,11 @@ async function handleProductDeleted(deleted) {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            <tr v-if="products.length === 0">
+                                <td colspan="5" class="px-6 py-20 text-center text-gray-500">
+                                    No products found for selected categories.
+                                </td>
+                            </tr>
                             <!-- Example Row -->
                             
                             <tr v-for="product in products" :key="product.id">
@@ -103,7 +128,8 @@ async function handleProductDeleted(deleted) {
                             
                             <!-- More rows... -->
                         </tbody>
-</table>
+        </table>
+    </div>
 
                     <update-product-modal
                         v-if="showEditModal"

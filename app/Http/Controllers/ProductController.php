@@ -18,7 +18,16 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->paginate(5);
+        $query = Product::with('category')->latest();
+
+        // Accept both `categories` and `categories[]` query shapes
+        $categories = $request->query('categories', $request->query('categories[]'));
+        if (!empty($categories)) {
+            $ids = is_array($categories) ? $categories : explode(',', (string) $categories);
+            $query->whereIn('category_id', $ids);
+        }
+
+        $products = $query->paginate(5)->withQueryString();
 
         if ($request->wantsJson()) {
             return response()->json($products);
