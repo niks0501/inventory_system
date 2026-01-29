@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Filters\ProductFilter;
 use Illuminate\Http\Request;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
@@ -16,16 +17,12 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request, ProductFilter $filter)
     {
         $query = Product::with('category')->latest();
 
-        // Accept both `categories` and `categories[]` query shapes
-        $categories = $request->query('categories', $request->query('categories[]'));
-        if (!empty($categories)) {
-            $ids = is_array($categories) ? $categories : explode(',', (string) $categories);
-            $query->whereIn('category_id', $ids);
-        }
+        // Delegate filtering to ProductFilter (search, categories, status)
+        $query = $filter->apply($query);
 
         $products = $query->paginate(5)->withQueryString();
 

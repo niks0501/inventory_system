@@ -20,6 +20,7 @@ const props = defineProps({
 
 const products = ref(Array.isArray(props.initialProducts) ? [...props.initialProducts] : [])
 const selectedCategories = ref([])
+const search = ref('')
 
 function editProduct(product) {
     selectedProduct.value = product
@@ -58,7 +59,30 @@ async function loadProducts() {
 
 function handleCategoriesUpdate(newValue) {
     selectedCategories.value = Array.isArray(newValue) ? [...newValue] : []
+    // keep current AJAX behavior for category-only updates
     loadProducts()
+}
+
+// Initialize search from current URL
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search)
+    search.value = params.get('search') || ''
+})
+
+function navigateToSearch() {
+    const params = new URLSearchParams(window.location.search)
+    params.delete('categories[]')
+    params.delete('categories')
+    selectedCategories.value.forEach(id => params.append('categories[]', id))
+
+    if (search.value && search.value.length > 0) {
+        params.set('search', search.value)
+    } else {
+        params.delete('search')
+    }
+
+    const qs = params.toString() ? ('?' + params.toString()) : ''
+    window.location.href = '/products' + qs
 }
 
 onMounted(() => {
@@ -90,8 +114,19 @@ async function handleProductDeleted(deleted) {
 </script>
 
 <template>
-    <div class="mb-4 text-start">
+    <div class="mb-4 text-start flex items-center justify-between">
         <filter-products-button :categories="props.categories" @update:categories="handleCategoriesUpdate" />
+        <div>
+            <input
+                v-model="search"
+                type="search"
+                placeholder="Search products..."
+                class="border p-2 rounded"
+                aria-label="Search products"
+                @keyup.enter="navigateToSearch"
+            />
+            <button type="button" class="ml-2 px-3 py-2 bg-indigo-600 text-white rounded" @click="navigateToSearch">Search</button>
+        </div>
     </div>
 
     <div class="min-h-60 overflow-auto">
