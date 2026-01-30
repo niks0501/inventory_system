@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import UpdateProductModal from './UpdateProductModal.vue'
 import FilterProductsButton from './FilterProductsButton.vue'
 
@@ -21,6 +21,15 @@ const props = defineProps({
 const products = ref(Array.isArray(props.initialProducts) ? [...props.initialProducts] : [])
 const selectedCategories = ref([])
 const search = ref('')
+const loading = ref(false)
+
+function debounce(fn, wait = 400) {
+    let t
+    return (...args) => {
+        clearTimeout(t)
+        t = setTimeout(() => fn(...args), wait)
+    }
+}
 
 function editProduct(product) {
     selectedProduct.value = product
@@ -39,11 +48,18 @@ function deleteProduct(product) {
 
 async function loadProducts() {
     try {
+        loading.value = true
+
         const params = new URLSearchParams(window.location.search)
         // remove any existing category params to replace with selected ones
         params.delete('categories[]')
         params.delete('categories')
         selectedCategories.value.forEach(id => params.append('categories[]', id))
+        if (search.value && search.value.length > 0) {
+            params.set('search', search.value)
+        } else {
+            params.delete('search')
+        }
 
         const res = await fetch('/products' + (params.toString() ? ('?' + params.toString()) : ''), {
             headers: { Accept: 'application/json' },
@@ -51,15 +67,19 @@ async function loadProducts() {
         if (res.ok) {
             const data = await res.json()
             products.value = Array.isArray(data.data) ? data.data : []
+            // keep server response handling minimal; front-end pagination is server-rendered
         }
     } catch (e) {
         console.error('Failed to load products', e)
+    } finally {
+        loading.value = false
     }
 }
 
 function handleCategoriesUpdate(newValue) {
     selectedCategories.value = Array.isArray(newValue) ? [...newValue] : []
-    // keep current AJAX behavior for category-only updates
+    // fetch filtered results via AJAX
+    updateUrl()
     loadProducts()
 }
 
@@ -70,27 +90,56 @@ onMounted(() => {
 })
 
 function navigateToSearch() {
-    const params = new URLSearchParams(window.location.search)
-    params.delete('categories[]')
-    params.delete('categories')
-    selectedCategories.value.forEach(id => params.append('categories[]', id))
+    updateUrl()
+    loadProducts()
+}
 
+function buildParams() {
+    const params = new URLSearchParams()
+    selectedCategories.value.forEach(id => params.append('categories[]', id))
     if (search.value && search.value.length > 0) {
         params.set('search', search.value)
-    } else {
-        params.delete('search')
     }
+    return params
+}
 
+function updateUrl() {
+    const params = buildParams()
     const qs = params.toString() ? ('?' + params.toString()) : ''
-    window.location.href = '/products' + qs
+    history.pushState({}, '', '/products' + qs)
+}
+
+const debouncedLoad = debounce(() => {
+    updateUrl()
+    loadProducts()
+}, 400)
+
+watch(search, () => {
+    debouncedLoad()
+})
+
+function handlePopState() {
+    const params = new URLSearchParams(window.location.search)
+    search.value = params.get('search') || ''
+    const cats = params.getAll('categories[]')
+    if (cats.length === 0) {
+        const alt = params.getAll('categories')
+        selectedCategories.value = alt
+    } else {
+        selectedCategories.value = cats
+    }
+    // when user navigates history, reload filtered results via AJAX
+    loadProducts()
 }
 
 onMounted(() => {
     window.addEventListener('product-created', handleProductCreated)
+    window.addEventListener('popstate', handlePopState)
 })
 
 onUnmounted(() => {
     window.removeEventListener('product-created', handleProductCreated)
+    window.removeEventListener('popstate', handlePopState)
 })
 
 function handleProductUpdated(updatedProduct) {
@@ -164,6 +213,10 @@ async function handleProductDeleted(deleted) {
                             <!-- More rows... -->
                         </tbody>
         </table>
+    </div>
+
+    <div class="mt-4">
+        <div v-if="loading" class="text-sm text-gray-500 mb-2">Loading...</div>
     </div>
 
                     <update-product-modal
